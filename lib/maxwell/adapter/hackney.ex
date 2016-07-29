@@ -63,9 +63,10 @@ defmodule Maxwell.Adapter.Hackney do
       {:hackney_response, _id, {:error, _reason} = error} ->
         send(target, {:maxwell_response, error})
       {:hackney_response, _id, :done} ->
-        response =
-          {:ok, status, headers, body}
-          |> format_response(env)
+        response = case {:ok, status, headers, body} |> format_response(env) do
+          {:ok, _} = response -> response
+          {:error, reason} -> {:error, reason, env}
+        end
         send(target, {:maxwell_response, response})
       {:hackney_response, _id, append_body} ->
         new_body = if body, do: body <> append_body, else: append_body
